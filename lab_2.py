@@ -16,7 +16,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-import gym
+import gymnasium as gym
 
 EpisodeStats = namedtuple("Stats", ["episode_lengths", "episode_rewards"])
 
@@ -354,7 +354,7 @@ def run_td():
     alpha = 0.5
 
     # create env : https://github.com/openai/gym/blob/master/gym/envs/toy_text/cliffwalking.py
-    cliffwalking_env = gym.make('CliffWalking-v0')
+    cliffwalking_env = gym.make('CliffWalking-v1')
     cliffwalking_env.render()
 
     print('SARSA\n')
@@ -376,5 +376,5 @@ def run_td():
 
 
 if __name__ == '__main__':
-    run_mc()
+    # run_mc()
     run_td()
