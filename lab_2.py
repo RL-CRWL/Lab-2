@@ -206,16 +206,15 @@ def mc_prediction(policy, env, num_episodes, discount_factor=1.0, max_steps_per_
         V: A dictionary mapping state -> value.
     """
 
-    # Keep track of returns for each state
+    
     returns = defaultdict(list)
-    # Final value function
     V = defaultdict(float)
 
     for i_episode in range(1, num_episodes + 1):
         if print_ and i_episode % 1000 == 0:
             print(f"Episode {i_episode}/{num_episodes}")
 
-        # Reset environment
+        
         state_dict, _ = env.reset()
         state = state_dict['observation'] if isinstance(state_dict, dict) else state_dict
 
@@ -223,12 +222,12 @@ def mc_prediction(policy, env, num_episodes, discount_factor=1.0, max_steps_per_
         steps = 0
         episode = []
 
-        # Generate an episode
+        
         while not done and steps < max_steps_per_episode:
             action = policy(state)
             step_result = env.step(action)
 
-            # Gym >=0.26 returns 5 values
+           
             if len(step_result) == 5:
                 next_state_dict, reward, terminated, truncated, _ = step_result
                 done = terminated or truncated
@@ -241,13 +240,12 @@ def mc_prediction(policy, env, num_episodes, discount_factor=1.0, max_steps_per_
             state = next_state
             steps += 1
 
-        # Compute returns for first-visit MC
+        
         G = 0
         visited_states = set()
         for state, reward in reversed(episode):
             G = discount_factor * G + reward
             if state not in visited_states:
-                # Convert list to tuple if state is a list (hashable)
                 if isinstance(state, list):
                     state = tuple(state)
                 returns[state].append(G)
