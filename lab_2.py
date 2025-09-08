@@ -155,13 +155,38 @@ def td_plot_values(Q, algor_name="", state_shape=((4, 12))):
     plt.show(block=False)
 
 
+def generate_episode(env, policy):
+        episode = []
+        state, info = env.reset()  # Reset the environment to start a new episode
+        done = False
+
+        while not done:
+            action = policy(state)  # Choose an action based on the policy
+            next_state, reward, done, truncated, info = env.step(action)  # Take the action
+            episode.append((state, action, reward))  # Store the state, action, and reward
+            state = next_state  # Update the current state
+
+        return episode    
+
 ##################
 
 def blackjack_sample_policy(observation):
     """
     A policy that sticks if the player score is >= 20 and hits otherwise.
     """
-    raise NotImplementedError
+
+    if {} in observation:
+        target, _ = observation
+    else:
+        target = observation
+
+    player_sum, dealer_card, usable_ace = target
+    
+    if player_sum >= 20:
+        return 0  
+    else:
+        return 1 
+
 
 
 def mc_prediction(policy, env, num_episodes, discount_factor=1.0, max_steps_per_episode=9999, print_=False):
@@ -170,18 +195,66 @@ def mc_prediction(policy, env, num_episodes, discount_factor=1.0, max_steps_per_
     for a given policy using sampling.
 
     Args:
-        policy: A function that maps an observation to action probabilities.
+        policy: A function that maps an observation to an action.
         env: OpenAI gym environment.
         num_episodes: Number of episodes to sample.
         discount_factor: Gamma discount factor.
-        print_: print every num of episodes - don't print anything if False
+        max_steps_per_episode: Maximum steps per episode.
+        print_: Print progress every 1000 episodes (optional).
 
     Returns:
-        A dictionary that maps from state -> value.
-        The state is a tuple and the value is a float.
+        V: A dictionary mapping state -> value.
     """
 
-    raise NotImplementedError
+    
+    returns = defaultdict(list)
+    V = defaultdict(float)
+
+    for i_episode in range(1, num_episodes + 1):
+        if print_ and i_episode % 1000 == 0:
+            print(f"Episode {i_episode}/{num_episodes}")
+
+        
+        state_dict, _ = env.reset()
+        state = state_dict['observation'] if isinstance(state_dict, dict) else state_dict
+
+        done = False
+        steps = 0
+        episode = []
+
+        
+        while not done and steps < max_steps_per_episode:
+            action = policy(state)
+            step_result = env.step(action)
+
+           
+            if len(step_result) == 5:
+                next_state_dict, reward, terminated, truncated, _ = step_result
+                done = terminated or truncated
+            else:
+                next_state_dict, reward, done, _ = step_result
+
+            next_state = next_state_dict['observation'] if isinstance(next_state_dict, dict) else next_state_dict
+
+            episode.append((state, reward))
+            state = next_state
+            steps += 1
+
+        
+        G = 0
+        visited_states = set()
+        for state, reward in reversed(episode):
+            G = discount_factor * G + reward
+            if state not in visited_states:
+                if isinstance(state, list):
+                    state = tuple(state)
+                returns[state].append(G)
+                V[state] = np.mean(returns[state])
+                visited_states.add(state)
+
+    return V
+
+            
 
 
 def argmax(numpy_array):
@@ -304,7 +377,7 @@ def q_learning(env, num_episodes, discount_factor=1.0, epsilon=0.05, alpha=0.5, 
 def run_mc():
     # Exploring the BlackjackEnv
     # create env from https://gym.openai.com/envs/Blackjack-v0/
-    blackjack_env = gym.make('Blackjack-v0')
+    blackjack_env = gym.make('Blackjack-v1')
     # let's see what's hidden inside this Object
     print(vars(blackjack_env))
 
@@ -314,13 +387,28 @@ def run_mc():
     #     the dealer's one showing card (1-10 where 1 is ace),
     #     and whether or not the player holds a usable ace (0 or 1).
     print('observation_space', blackjack_env.observation_space)
-    observation = blackjack_env.reset()
+    observation, info = blackjack_env.reset()
     print('observation:', observation)
     # let's sample a random action
+
     random_action = blackjack_env.action_space.sample()
     print('random action:', random_action)
     # let's simulate one action
-    next_observation, reward, done, _ = blackjack_env.step(random_action)
+   
+
+        # Reset environment
+   
+
+    # Sample a random action
+    next_observation, reward, terminated, truncated, info = blackjack_env.step(random_action)
+    done = terminated or truncated
+    print('next_observation:', next_observation, 'reward:', reward, 'done:', done)
+
+    # Take a step
+    next_observation, reward, terminated, truncated, info = blackjack_env.step(random_action)
+    done = terminated or truncated
+    print('next_observation:', next_observation, 'reward:', reward, 'done:', done)
+
     print('next_observation:', next_observation)
     print('reward:', reward)
     print('done:', done)
