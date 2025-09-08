@@ -259,7 +259,20 @@ def mc_prediction(policy, env, num_episodes, discount_factor=1.0, max_steps_per_
 
 def argmax(numpy_array):
     """ argmax implementation that chooses randomly between ties """
-    raise NotImplementedError
+    max_index = 0
+    max_index_array = []
+    max = numpy_array[0]
+    for i in range(1, len(numpy_array)):
+        if max < numpy_array[i]:
+            max = numpy_array[i]
+            max_index = i
+        elif max == numpy_array[i]:
+            if len(max_index_array) == 0:
+                max_index_array.append(max_index)
+            max_index_array.append(i)
+    if len(max_index_array) != 0:
+        return max_index_array[np.random.randint(len(max_index_array))]
+    return max_index
 
 
 def make_epsilon_greedy_policy(Q, epsilon, nA):
@@ -277,8 +290,18 @@ def make_epsilon_greedy_policy(Q, epsilon, nA):
         the probabilities for each action in the form of a numpy array of length nA.
 
     """
+    def policy_fn(state):
+        # Create probability array for all actions
+        p = np.ones(nA) * epsilon / nA
+        
+        # Find the best action for this state
+        best_action = argmax(Q[state])
+        
+        # Give extra probability to the best action
+        p[best_action] += (1.0 - epsilon)
+        
+        return p
 
-    raise NotImplementedError
     return policy_fn
 
 
@@ -331,6 +354,11 @@ def SARSA(env, num_episodes, discount_factor=1.0, epsilon=0.1, alpha=0.5, print_
     stats = EpisodeStats(
         episode_lengths=np.zeros(num_episodes),
         episode_rewards=np.zeros(num_episodes))
+    
+    for episode in range(num_episodes):
+        state, info = env.reset()
+        # action = np.random.choice(env.action_space.)
+        
 
     # Update statistics after getting a reward - use within loop, call the following lines
     # stats.episode_rewards[i_episode] += reward
@@ -363,7 +391,7 @@ def q_learning(env, num_episodes, discount_factor=1.0, epsilon=0.05, alpha=0.5, 
 
     # The policy we're following
     policy = make_epsilon_greedy_policy(Q, epsilon, env.action_space.n)
-
+    
     # Keeps track of useful statistics
     stats = EpisodeStats(
         episode_lengths=np.zeros(num_episodes),
@@ -442,8 +470,10 @@ def run_td():
     alpha = 0.5
 
     # create env : https://github.com/openai/gym/blob/master/gym/envs/toy_text/cliffwalking.py
-    cliffwalking_env = gym.make('CliffWalking-v0')
+    cliffwalking_env = gym.make('CliffWalking-v1')
+    cliffwalking_env.reset()
     cliffwalking_env.render()
+
 
     print('SARSA\n')
     sarsa_q_values, stats_sarsa = SARSA(cliffwalking_env, num_episodes=num_episodes,
@@ -464,5 +494,5 @@ def run_td():
 
 
 if __name__ == '__main__':
-    run_mc()
+    # run_mc()
     run_td()
