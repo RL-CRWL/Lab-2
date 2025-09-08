@@ -6,7 +6,6 @@
 # 2333776 Refiloe Mopeloa
 ###
 
-
 from collections import defaultdict
 from collections import namedtuple
 import sys
@@ -323,7 +322,72 @@ def mc_control_epsilon_greedy(env, num_episodes, discount_factor=1.0, epsilon=0.
         policy is a function that takes an observation as an argument and returns
         action probabilities
     """
-    raise NotImplementedError
+    
+    # Number of actions in the environment
+    nA = env.action_space.n
+    
+    # Initialize Q: dictionary mapping state -> action values (numpy array of length nA)
+    Q = defaultdict(lambda: np.zeros(nA))
+    
+    # Initialize returns: dictionary mapping (state, action) -> list of returns
+    returns = defaultdict(list)
+    
+    # Create epsilon-greedy policy
+    policy = make_epsilon_greedy_policy(Q, epsilon, nA)
+    
+    for i_episode in range(1, num_episodes + 1):
+        if print_ and i_episode % 1000 == 0:
+            print(f"Episode {i_episode}/{num_episodes}")
+        
+        # Generate an episode following the current policy
+        episode = []
+        state_dict, _ = env.reset()
+        state = state_dict['observation'] if isinstance(state_dict, dict) else state_dict
+        
+        done = False
+        steps = 0
+        
+        while not done and steps < max_steps_per_episode:
+            # Choose action using current policy
+            action_probs = policy(state)
+            action = np.random.choice(np.arange(nA), p=action_probs)
+            
+            # Take action
+            step_result = env.step(action)
+            
+            if len(step_result) == 5:
+                next_state_dict, reward, terminated, truncated, _ = step_result
+                done = terminated or truncated
+            else:
+                next_state_dict, reward, done, _ = step_result
+            
+            next_state = next_state_dict['observation'] if isinstance(next_state_dict, dict) else next_state_dict
+            
+            # Store (state, action, reward) in episode
+            episode.append((state, action, reward))
+            
+            state = next_state
+            steps += 1
+        
+        # Process the episode to update Q-values
+        G = 0
+        visited_state_actions = set()
+        
+        # Process episode in reverse order
+        for t in range(len(episode) - 1, -1, -1):
+            state, action, reward = episode[t]
+            G = discount_factor * G + reward
+            
+            # Check if this (state, action) pair has been visited in this episode
+            state_action = (state, action)
+            if state_action not in visited_state_actions:
+                visited_state_actions.add(state_action)
+                
+                # Update returns and Q-value for this state-action pair
+                returns[state_action].append(G)
+                Q[state][action] = np.mean(returns[state_action])
+    
+    return Q, policy
 
 
 def SARSA(env, num_episodes, discount_factor=1.0, epsilon=0.1, alpha=0.5, print_=False):
@@ -359,7 +423,6 @@ def SARSA(env, num_episodes, discount_factor=1.0, epsilon=0.1, alpha=0.5, print_
         state, info = env.reset()
         # action = np.random.choice(env.action_space.)
         
-
     # Update statistics after getting a reward - use within loop, call the following lines
     # stats.episode_rewards[i_episode] += reward
     # stats.episode_lengths[i_episode] = t
@@ -400,6 +463,7 @@ def q_learning(env, num_episodes, discount_factor=1.0, epsilon=0.05, alpha=0.5, 
     # Update statistics after getting a reward - use within loop, call the following lines
     # stats.episode_rewards[i_episode] += reward
     # stats.episode_lengths[i_episode] = t
+    raise NotImplementedError
 
 
 def run_mc():
@@ -423,10 +487,8 @@ def run_mc():
     print('random action:', random_action)
     # let's simulate one action
    
-
         # Reset environment
    
-
     # Sample a random action
     next_observation, reward, terminated, truncated, info = blackjack_env.step(random_action)
     done = terminated or truncated
