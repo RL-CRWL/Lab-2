@@ -325,7 +325,6 @@ def mc_control_epsilon_greedy(env, num_episodes, discount_factor=1.0, epsilon=0.
     """
     raise NotImplementedError
 
-
 def SARSA(env, num_episodes, discount_factor=1.0, epsilon=0.1, alpha=0.5, print_=False):
     """
     SARSA algorithm: On-policy TD control. Finds the optimal greedy policy
@@ -344,6 +343,16 @@ def SARSA(env, num_episodes, discount_factor=1.0, epsilon=0.1, alpha=0.5, print_
         Q is the optimal action-value function, a dictionary mapping state -> action values.
         stats is an EpisodeStats object with two numpy arrays for episode_lengths and episode_rewards.
     """
+    
+    
+    def check_availiable_moves(env):
+        all_moves = env.action_space.n
+        possible_moves = []
+        for i in range(all_moves):
+            if env.action_space.contains(i):
+                possible_moves.append(i)
+        return possible_moves
+    
     # A nested dictionary that maps state -> (action -> action-value).
     Q = defaultdict(lambda: np.zeros(env.action_space.n))
 
@@ -357,8 +366,25 @@ def SARSA(env, num_episodes, discount_factor=1.0, epsilon=0.1, alpha=0.5, print_
     
     for episode in range(num_episodes):
         state, info = env.reset()
-        # action = np.random.choice(env.action_space.)
+        terminated = truncated = False
+        total_reward = 0
+        t = 0
         
+        while not (terminated or truncated):
+            action  = np.random.choice(check_availiable_moves(env), p=policy(state))
+            next_state, reward, terminated, truncated, info = env.step(action)
+            total_reward += reward
+            next_action  = np.random.choice(check_availiable_moves(env), p=policy(next_state))
+            Q[state][action] += alpha * (reward + discount_factor * Q[next_state][next_action] - Q[state][action])
+            state = next_state
+            action = next_action
+            t+=1
+            
+        stats.episode_rewards[episode] = total_reward
+        stats.episode_lengths[episode] = t
+        # action = np.random.choice(env.action_space.)
+    
+    return (Q, stats)
 
     # Update statistics after getting a reward - use within loop, call the following lines
     # stats.episode_rewards[i_episode] += reward
@@ -385,7 +411,7 @@ def q_learning(env, num_episodes, discount_factor=1.0, epsilon=0.05, alpha=0.5, 
         Q is the optimal action-value function, a dictionary mapping state -> action values.
         stats is an EpisodeStats object with two numpy arrays for episode_lengths and episode_rewards.
     """
-
+ 
     # A nested dictionary that maps state -> (action -> action-value).
     Q = defaultdict(lambda: np.zeros(env.action_space.n))
 
@@ -471,8 +497,8 @@ def run_td():
 
     # create env : https://github.com/openai/gym/blob/master/gym/envs/toy_text/cliffwalking.py
     cliffwalking_env = gym.make('CliffWalking-v1')
-    cliffwalking_env.reset()
-    cliffwalking_env.render()
+    # cliffwalking_env.reset()
+    # cliffwalking_env.render()
 
 
     print('SARSA\n')
