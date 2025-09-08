@@ -6,7 +6,6 @@
 # 2333776 Refiloe Mopeloa
 ###
 
-
 from collections import defaultdict
 from collections import namedtuple
 import sys
@@ -325,6 +324,7 @@ def mc_control_epsilon_greedy(env, num_episodes, discount_factor=1.0, epsilon=0.
     """
     raise NotImplementedError
 
+
 def SARSA(env, num_episodes, discount_factor=1.0, epsilon=0.1, alpha=0.5, print_=False):
     """
     SARSA algorithm: On-policy TD control. Finds the optimal greedy policy
@@ -426,6 +426,7 @@ def q_learning(env, num_episodes, discount_factor=1.0, epsilon=0.05, alpha=0.5, 
     # Update statistics after getting a reward - use within loop, call the following lines
     # stats.episode_rewards[i_episode] += reward
     # stats.episode_lengths[i_episode] = t
+    raise NotImplementedError
 
 
 def run_mc():
@@ -449,10 +450,8 @@ def run_mc():
     print('random action:', random_action)
     # let's simulate one action
    
-
         # Reset environment
    
-
     # Sample a random action
     next_observation, reward, terminated, truncated, info = blackjack_env.step(random_action)
     done = terminated or truncated
