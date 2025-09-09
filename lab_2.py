@@ -439,7 +439,7 @@ def q_learning(env, num_episodes, discount_factor=1.0, epsilon=0.05, alpha=0.5, 
         stats.episode_rewards[i_episode] += reward
         stats.episode_lengths[i_episode] = t
     return (Q, stats)
-
+    # raise NotImplementedError
 
 def run_mc():
     # Exploring the BlackjackEnv
