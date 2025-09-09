@@ -439,6 +439,29 @@ def q_learning(env, num_episodes, discount_factor=1.0, epsilon=0.05, alpha=0.5, 
         stats.episode_rewards[i_episode] += reward
         stats.episode_lengths[i_episode] = t
     return (Q, stats)
+
+    '''
+    2.2
+
+    4. The policies are different because each method updates its Q-table differently. 
+    The Q-values for Q-learning are updated with 
+    Q[state][action] = Q[state][action] + alpha*(curr_reward + discount_factor*np.max(Q[next_state]) - Q[state][action]),
+    whereas the Sarsa updates its values with 
+    Q[state][action] += alpha * (reward + discount_factor * Q[next_state][next_action] - Q[state][action]).
+    This means that Sarsa uses the action is will take in the next state according to its own policy, 
+    and Q-learning uses the best possible next action in the next state.
+
+    5. With a solely exploitative policy, both agents will choose the actions which give them the maximum reward.
+    Looking at the value plots, we can see that the Sarsa method has lower negative rewards further away from the cliff face. 
+    This means that the agent will take a longer path to get to the final destination, as it reduces the liklihood of the
+    agent falling.
+    The Q-learning method however, has lower negative rewards right up against the cliff face. This means that the Q-learning agent
+    will walk along the cliff as it will achieve a higher reward.
+    The Q-learning agent would therefore perform better as it requires fewer steps to get to the goal state.
+
+    6. Both methods will likely fail to learn the optimal policy, because they will only exploit the
+    state which gives them the best reward instead of exploring other states which could be better.
+    '''
     # raise NotImplementedError
 
 def run_mc():
