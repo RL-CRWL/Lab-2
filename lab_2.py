@@ -324,6 +324,13 @@ def mc_control_epsilon_greedy(env, num_episodes, discount_factor=1.0, epsilon=0.
     """
     raise NotImplementedError
 
+def check_availiable_moves(env):
+        all_moves = env.action_space.n
+        possible_moves = []
+        for i in range(all_moves):
+            if env.action_space.contains(i):
+                possible_moves.append(i)
+        return possible_moves
 
 def SARSA(env, num_episodes, discount_factor=1.0, epsilon=0.1, alpha=0.5, print_=False):
     """
@@ -343,16 +350,8 @@ def SARSA(env, num_episodes, discount_factor=1.0, epsilon=0.1, alpha=0.5, print_
         Q is the optimal action-value function, a dictionary mapping state -> action values.
         stats is an EpisodeStats object with two numpy arrays for episode_lengths and episode_rewards.
     """
-    
-    
-    def check_availiable_moves(env):
-        all_moves = env.action_space.n
-        possible_moves = []
-        for i in range(all_moves):
-            if env.action_space.contains(i):
-                possible_moves.append(i)
-        return possible_moves
-    
+
+
     # A nested dictionary that maps state -> (action -> action-value).
     Q = defaultdict(lambda: np.zeros(env.action_space.n))
 
@@ -423,10 +422,23 @@ def q_learning(env, num_episodes, discount_factor=1.0, epsilon=0.05, alpha=0.5, 
         episode_lengths=np.zeros(num_episodes),
         episode_rewards=np.zeros(num_episodes))
 
+    for i_episode in range(num_episodes):
+        state, _ = env.reset()
+        terminated, truncated = False, False
+        reward = 0
+        t = 0
+
+        while not (terminated or truncated):
+            action = np.random.choice(check_availiable_moves(env), p=policy(state))
+            next_state, curr_reward, terminated, truncated, _ = env.step(action)
+            reward += curr_reward
+            Q[state][action] = Q[state][action] + alpha*(curr_reward + discount_factor*np.max(Q[next_state]) - Q[state][action])
+            state = next_state
+            t+=1
     # Update statistics after getting a reward - use within loop, call the following lines
-    # stats.episode_rewards[i_episode] += reward
-    # stats.episode_lengths[i_episode] = t
-    raise NotImplementedError
+        stats.episode_rewards[i_episode] += reward
+        stats.episode_lengths[i_episode] = t
+    return (Q, stats)
 
 
 def run_mc():
@@ -495,7 +507,7 @@ def run_td():
     alpha = 0.5
 
     # create env : https://github.com/openai/gym/blob/master/gym/envs/toy_text/cliffwalking.py
-    cliffwalking_env = gym.make('CliffWalking-v1')
+    cliffwalking_env = gym.make('CliffWalking-v0')
     # cliffwalking_env.reset()
     # cliffwalking_env.render()
 
