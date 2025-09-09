@@ -603,7 +603,7 @@ def run_td():
     alpha = 0.5
 
     # create env : https://github.com/openai/gym/blob/master/gym/envs/toy_text/cliffwalking.py
-    cliffwalking_env = gym.make('CliffWalking-v0')
+    cliffwalking_env = gym.make('CliffWalking-v1')
     # cliffwalking_env.reset()
     # cliffwalking_env.render()
 
