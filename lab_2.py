@@ -627,5 +627,5 @@ def run_td():
 
 
 if __name__ == '__main__':
-    # run_mc()
+    run_mc()
     run_td()
